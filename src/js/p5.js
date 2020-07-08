@@ -5,6 +5,7 @@ let triangleWidth  = 10;
 let triangleHeight = 20;
 let iteratorA      = 768;
 let iteratorB      = 2048;
+let drawIterator   = 0;
 let iteratorX      = 0;
 let iteratorY      = 0;
 let maxChromaC     = 0;
@@ -27,30 +28,9 @@ function setup() {
 }
 
 function draw() {
-	let xPos        = iteratorX*triangleWidth;
-	let yPos        = iteratorY*triangleHeight;
-	let chromaA     = Math.ceil(iteratorY*(256/rows));
-	let chromaB     = Math.ceil(iteratorX*(256/columns));
-	let chromaC     = Math.ceil(iteratorX+iteratorY*((255-columns)/rows));
-	let opacity     = 50+(iteratorX+iteratorY)%25;
-	let topOrBottom = [0, 1];
-
-	if (iteratorY%2 === 0) {
-		xPos += (triangleWidth/2);
-	}
-
-	if (chromaC > maxChromaC) {
-		maxChromaC = chromaC;
-	}
-
-	if (random(topOrBottom) === 0) {
-		fill(chromaA,chromaB,chromaC,opacity);
-		drawTriangle(xPos, yPos);
-	} else {
-		fill(chromaC*0.75,chromaB*0.75,chromaA*0.75,25+opacity);
-		drawInvertedTriangle(xPos, yPos);
-	}
-
+	drawIterator += 1;
+	drawHexagon();
+	//drawSingle();
 	moveDrawPoint();
 }
 
@@ -62,11 +42,11 @@ function moveDrawPoint() {
 	iteratorX += random(positionsShifts);
 	iteratorY += random(positionsShifts);
 
-	if (iteratorX > columns || iteratorX < 0) {
+	if (iteratorX > columns+1 || iteratorX < -1) {
 		iteratorX = random(xStartPoints);
 	}
 
-	if (iteratorY > rows || iteratorY < 0) {
+	if (iteratorY > rows+1 || iteratorY < -1) {
 		iteratorY = random(yStartPoints);
 	}
 }
@@ -77,6 +57,131 @@ function drawTriangle(xPos, yPos) {
 
 function drawInvertedTriangle(xPos, yPos) {
 	triangle(xPos,yPos, xPos-triangleWidth/2,yPos+triangleHeight, xPos-triangleWidth,yPos);
+}
+
+function drawSingle() {
+	let td = getTriangleData(iteratorX, iteratorY, 25, 33);
+	let topOrBottom = [0, 1];
+
+	if (random(topOrBottom) === 0) {
+		setFillColor(td);
+		drawTriangle(td.xPos, td.yPos);
+	} else {
+		setFillColor(td, 0.75, 25);
+		drawInvertedTriangle(td.xPos, td.yPos);
+	}
+}
+
+function drawHexagon() {
+	let td = getTriangleData(iteratorX, iteratorY, 25, 33);
+
+	// Top triangles
+	setFillColor(td);
+	drawTriangle(td.xPos, td.yPos);
+	setFillColor(td, 0.75, 25);
+	drawInvertedTriangle(td.xPos, td.yPos);
+
+	td = getTriangleData(iteratorX-1, iteratorY, 50, 75);
+	setFillColor(td);
+	drawTriangle(td.xPos, td.yPos);
+
+	// Bottom triangles
+	td = getTriangleData(iteratorX-1, iteratorY+1, 50, 75);
+	setFillColor(td);
+	drawTriangle(td.xPos, td.yPos);
+	setFillColor(td, 0.75, 25);
+	drawInvertedTriangle(td.xPos, td.yPos);
+
+	td = getTriangleData(iteratorX, iteratorY+1, 50, 75);
+	setFillColor(td, 0.75, 25);
+	drawInvertedTriangle(td.xPos, td.yPos);
+}
+
+function getXPos(x, y) {
+	let xPos = x*triangleWidth;
+	if (y%2 === 0) {
+		xPos += (triangleWidth/2);
+	}
+
+	return xPos;
+}
+
+function getYPos(y) {
+	return y*triangleHeight;
+}
+
+function getChromaA(seed) {
+	return Math.ceil(seed*(256/rows));
+}
+
+function getChromaB(seed) {
+	return Math.ceil(seed*(256/columns));
+}
+
+function getChromaC(seed) {
+	return Math.ceil(seed*((255-columns)/rows));
+}
+
+function getOpacity(seedA, seedB, min, max) {
+	return min+(seedA+seedB)%(max-min);
+}
+
+function getTriangleData(x, y, opacityMin, opacityMax) {
+	return {
+		xPos: getXPos(x, y),
+		yPos: getYPos(y),
+		chromaA: getChromaA(y),
+		chromaB: getChromaB(x),
+		chromaC: getChromaC(x+y),
+		opacity: getOpacity(x, y, opacityMin, opacityMax),
+	}
+}
+
+function setFillColor(td, saturationModifier = 1, opacityModifier = 0) {
+	let pattern = Math.ceil(drawIterator/1000)%5;
+
+	switch (pattern) {
+		case 0:
+			fill(
+				td.chromaC*saturationModifier,
+				td.chromaB*saturationModifier,
+				td.chromaA*saturationModifier,
+				td.opacity+opacityModifier,
+			);
+			break;
+		case 1:
+			fill(
+				td.chromaA*saturationModifier,
+				td.chromaC*saturationModifier,
+				td.chromaB*saturationModifier,
+				td.opacity+opacityModifier,
+			);
+			break;
+		case 2:
+			fill(
+				td.chromaB*saturationModifier,
+				td.chromaA*saturationModifier,
+				td.chromaC*saturationModifier,
+				td.opacity+opacityModifier,
+			);
+			break;
+		case 3:
+			fill(
+				td.chromaA*saturationModifier,
+				td.chromaB*saturationModifier,
+				td.chromaC*saturationModifier,
+				td.opacity+opacityModifier,
+			);
+			break;
+		case 4:
+			fill(
+				td.chromaC*saturationModifier,
+				td.chromaA*saturationModifier,
+				td.chromaB*saturationModifier,
+				td.opacity+opacityModifier,
+			);
+			break;
+	}
 }
 
 function fillCanvas() {
