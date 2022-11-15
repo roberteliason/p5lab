@@ -18,7 +18,7 @@
     "browser-sync-webpack-plugin": "2.*",
     "cross-env": "6.*",
     "eslint": "6.*",
-    "laravel-mix": "5.*",
+    "laravel-mix": "6.*",
     "resolve-url-loader": "3.*",
     "sass": "1.*",
     "sass-loader": "8.*",
